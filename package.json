@@ -1,0 +1,29 @@
+{ "name": "pimatic-modbus-tcp",
+  "description": "This plugin allows access to ModBus TCP devices",
+  "author": "Matthias Bronnert",
+  "main": "modbus-tcp",
+  "files": [
+    "modbus-tcp.coffee",
+    "README.md",
+    "modbus-tcp-config-schema.coffee",
+    "device-config-schema.coffee"
+  ],
+  "version": "0.0.1",
+  "homepage": "https://github.com/bronnertm/pimatic-modbus-tcp/",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bronnertm/pimatic-modbus-tcp.git"
+  },
+  "configSchema": "modbus-tcp-config-schema.coffee",
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "pimatic": "0.8.*",
+"modbus-tcp": "0.4.*"
+  },
+  "engines": {
+    "node": ">0.8.x",
+    "npm": ">1.1.x"
+  }
+}
