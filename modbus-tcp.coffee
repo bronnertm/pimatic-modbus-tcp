@@ -83,8 +83,6 @@ module.exports = (env) ->
     # connection error callback
     errorCallback: (arrayKey,error) ->
       env.logger.debug("Error: "+error) if @debug
-      console.log error
-      console.log arrayKey
       if @.sessions.hasOwnProperty(arrayKey)
         delete @.sessions[arrayKey]
 
