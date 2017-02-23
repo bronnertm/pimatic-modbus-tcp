@@ -108,8 +108,7 @@ module.exports = (env) ->
     constructor: (@config) ->
       @name = @config.name
       @id = @config.id
-      
-      @isConnected = false
+
       @interval = 1000 * @config.interval
 
       @readVal = null
@@ -118,7 +117,7 @@ module.exports = (env) ->
       @attributes = {}
       switch @config.displayreturntype
         when 'Temperature'
-          @attributes.modbusvalue = {
+          @attributes.temperature = {
             label: "Temperature"
             description: "the measured temperature"
             type: "number"
@@ -126,7 +125,7 @@ module.exports = (env) ->
             acronym: 'T'
 }  
         when 'Number'
-          @attributes.modbusvalue = {
+          @attributes.number = {
             label: "Number"
             description: "the requested number"
             type: "number"
@@ -134,7 +133,7 @@ module.exports = (env) ->
             acronym: ''
 }  
         when 'Rpm'
-          @attributes.modbusvalue = {
+          @attributes.rpm = {
             label: "RPM"
             description: "the measured rpm"
             type: "number"
@@ -145,7 +144,13 @@ module.exports = (env) ->
 
       super()
 
-    getModbusvalue: () ->
+    getTemperature: () ->
+      return if @modbusvalue? then Promise.resolve(@modbusvalue)
+
+    getNumber: () ->
+      return if @modbusvalue? then Promise.resolve(@modbusvalue)
+
+    getRpm: () ->
       return if @modbusvalue? then Promise.resolve(@modbusvalue)
 
     getConnection: () ->
@@ -156,7 +161,13 @@ module.exports = (env) ->
 
       @modbusClient.readHoldingRegisters(@config.unitid, @config.address, @_getReadCount(),(err,coil) =>       
         @modbusvalue = @_doConvert(coil)
-        @emit "modbusvalue", @modbusvalue
+        switch @config.displayreturntype
+          when 'Temperature'
+            @emit "temperature", @modbusvalue
+          when 'Number'
+            @emit "number", @modbusvalue
+          when 'Rpm'
+            @emit "rpm", @modbusvalue
         return @readVal
 )
 
@@ -177,9 +188,9 @@ module.exports = (env) ->
         when 'FLOAT' 
           return Number((@_toFloat(data)).toFixed(2)) 
         when 'INT16' 
-          return Number(data[0][0]).readInt16BE()
+          return Number(data[0].readInt16BE())
         when 'UINT16' 
-          return Number(data[0][0]).readUInt16BE()
+          return Number(data[0].readUInt16BE())
 
     _scheduleUpdate: ->
       unless typeof @intervalObject is 'undefined'
@@ -190,21 +201,15 @@ module.exports = (env) ->
         @interval
 )
     _toUInt32: (toCombine) ->
-      buf = new Buffer(4)  
-      buf.writeUInt16BE(toCombine[1].readUInt16BE(), 0);
-      buf.writeUInt16BE(toCombine[0].readUInt16BE(), 2);
-      return buf;
+      buf = Buffer.concat([toCombine[1],toCombine[0]])
+      return buf.readUInt32BE();
 
     _toInt32: (toCombine) ->
-      buf = new Buffer(4)    
-      buf.writeUInt16BE(toCombine[1].readUInt16BE(), 0);
-      buf.writeUInt16BE(toCombine[0].readUInt16BE(), 2);
+      buf = Buffer.concat([toCombine[1],toCombine[0]])
       return buf.readInt32BE();
 
     _toFloat: (toCombine) ->
-      buf = new Buffer(4)
-      buf.writeUInt16LE(toCombine[1].readUInt16LE(), 0);
-      buf.writeUInt16LE(toCombine[0].readUInt16LE(), 2);
+      buf = Buffer.concat([toCombine[1],toCombine[0]])
       return buf.readFloatBE(0);
 
     destroy: () ->
